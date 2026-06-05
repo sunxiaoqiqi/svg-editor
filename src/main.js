@@ -1054,21 +1054,28 @@ class SvgEditorView extends ItemView {
     const svg = element.ownerSVGElement || this.renderedSvg
     if (!svg) return null
 
-    const rect = element.getBoundingClientRect()
-    const matrix = svg.getScreenCTM()
-    if (!matrix || rect.width <= 0 || rect.height <= 0) return null
+    let box
+    try {
+      box = element.getBBox()
+    } catch {
+      return null
+    }
 
-    const toSvg = matrix.inverse()
+    const elementMatrix = element.getScreenCTM()
+    const svgMatrix = svg.getScreenCTM()
+    if (!elementMatrix || !svgMatrix || box.width <= 0 || box.height <= 0) return null
+
+    const toSvg = svgMatrix.inverse()
     const points = [
-      [rect.left, rect.top],
-      [rect.right, rect.top],
-      [rect.left, rect.bottom],
-      [rect.right, rect.bottom],
+      [box.x, box.y],
+      [box.x + box.width, box.y],
+      [box.x, box.y + box.height],
+      [box.x + box.width, box.y + box.height],
     ].map(([x, y]) => {
       const point = svg.createSVGPoint()
       point.x = x
       point.y = y
-      return point.matrixTransform(toSvg)
+      return point.matrixTransform(elementMatrix).matrixTransform(toSvg)
     })
 
     const xs = points.map((point) => point.x)

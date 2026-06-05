@@ -138,11 +138,9 @@
 }
 
 .svg-editor-preview {
-  align-items: center;
   background: #f6f7f9;
-  display: flex;
+  display: block;
   flex: 1;
-  justify-content: center;
   min-height: 0;
   overflow: auto;
   padding: 16px;
@@ -153,9 +151,10 @@
 .svg-editor-preview svg {
   background: white;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
-  flex: none;
-  max-height: 100%;
-  max-width: 100%;
+  display: block;
+  margin: auto;
+  max-height: none;
+  max-width: none;
 }
 
 .svg-editor-preview svg * {
