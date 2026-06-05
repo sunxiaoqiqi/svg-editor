@@ -24,7 +24,7 @@ Add this object to `community-plugins.json`:
 
 ## Required Release Assets
 
-Create a GitHub release named `0.1.0` or `v0.1.0` and attach:
+Create a GitHub release named `0.1.1` or `v0.1.1` and attach:
 
 - `main.js`
 - `manifest.json`

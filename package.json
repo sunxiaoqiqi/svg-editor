@@ -1,7 +1,7 @@
 {
   "name": "obsidian-svg-canvas-editor",
-  "version": "0.1.0",
-  "description": "Edit SVG files in Obsidian with source, layers, canvas, and inspector panes.",
+  "version": "0.1.1",
+  "description": "Edit SVG files with source, layers, canvas, and inspector panes.",
   "main": "main.js",
   "repository": {
     "type": "git",
