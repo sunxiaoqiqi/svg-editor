@@ -73,7 +73,7 @@ Build output for release:
 - `manifest.json`
 - `styles.css`
 
-`npm run release:prepare` copies those files into `release/v<version>` based on `manifest.json`.
+`npm run release:prepare` copies those files into `release/<version>` based on `manifest.json`.
 
 For local testing, copy those files into an Obsidian vault plugin folder.
 
@@ -91,7 +91,7 @@ Before submitting to the Obsidian community plugin directory, run:
 npm run release:check
 ```
 
-This command runs linting, builds `main.js`, prepares `release/v<version>`, and verifies that the release assets match the root build output.
+This command runs linting, builds `main.js`, prepares `release/<version>`, and verifies that the release assets match the root build output.
 
 ## License
 

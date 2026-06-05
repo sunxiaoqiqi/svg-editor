@@ -180,8 +180,8 @@
 .svg-editor-preview line.svg-editor-selected-element,
 .svg-editor-preview polyline.svg-editor-selected-element,
 .svg-editor-preview polygon.svg-editor-selected-element {
-  stroke: #2563eb !important;
-  stroke-width: 3px !important;
+  stroke: #2563eb;
+  stroke-width: 3px;
 }
 
 .svg-editor-preview .svg-editor-hit-overlays * {

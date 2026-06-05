@@ -11,7 +11,7 @@ Use this checklist before publishing a GitHub release or submitting to the Obsid
 - [ ] `npm run release:check`
 - [ ] Confirm `manifest.json` version matches `package.json`.
 - [ ] Confirm release assets include `main.js`, `manifest.json`, and `styles.css`.
-- [ ] Confirm release assets in `release/v0.1.0` match the root build output.
+- [ ] Confirm release assets in `release/0.1.0` match the root build output.
 
 ## Manual Smoke Test
 

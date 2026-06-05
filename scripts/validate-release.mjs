@@ -42,7 +42,7 @@ for (const file of requiredReleaseAssets) assertFile(file)
 const manifest = readJson('manifest.json')
 const pkg = readJson('package.json')
 const versions = readJson('versions.json')
-const releaseDir = path.join(root, 'release', `v${manifest.version}`)
+const releaseDir = path.join(root, 'release', manifest.version)
 
 assert(/^[a-z0-9-]+$/.test(manifest.id), 'manifest.id must use lowercase letters, numbers, and hyphens.')
 assert(!manifest.id.includes('obsidian'), 'manifest.id must not contain "obsidian".')
@@ -53,6 +53,8 @@ assert(versions[manifest.version] === manifest.minAppVersion, 'versions.json mus
 assert(manifest.id === 'svg-canvas-editor', 'manifest id must be svg-canvas-editor.')
 assert(manifest.name === 'SVG Canvas Editor', 'manifest name must be SVG Canvas Editor.')
 assert(manifest.author === 'suntinglu777', 'manifest author must be suntinglu777.')
+assert(!/\bobsidian\b/i.test(manifest.description), 'manifest description must not include the word "Obsidian".')
+assert(!('authorUrl' in manifest), 'manifest authorUrl is omitted until a reachable author profile is available.')
 
 const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8')
 for (const phrase of ['File Access', 'Network Access', '.bak']) {

@@ -4,7 +4,7 @@ import process from 'node:process'
 
 const root = process.cwd()
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'))
-const releaseDir = path.join(root, 'release', `v${manifest.version}`)
+const releaseDir = path.join(root, 'release', manifest.version)
 const releaseAssets = ['main.js', 'manifest.json', 'styles.css']
 
 fs.mkdirSync(releaseDir, { recursive: true })
