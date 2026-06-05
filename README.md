@@ -47,11 +47,15 @@ example.svg.bak
 
 The backup is created only if it does not already exist. The plugin does not read or write files outside the vault.
 
+The plugin stores local editor preferences, such as the UI language and whether the Source pane is collapsed, in the plugin's Obsidian data file.
+
 ## Network Access And Privacy
 
 SVG Editor does not make network requests and does not collect, transmit, or store user data outside the vault.
 
 All editing happens locally inside Obsidian. SVG content stays in the user's vault unless the user syncs or publishes the vault through their own tools.
+
+The Copy ID command writes the selected element ID to the system clipboard only when the user explicitly chooses that command.
 
 ## Development
 
