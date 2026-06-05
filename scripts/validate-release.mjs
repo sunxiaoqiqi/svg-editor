@@ -45,6 +45,7 @@ const versions = readJson('versions.json')
 
 assert(/^[a-z0-9-]+$/.test(manifest.id), 'manifest.id must use lowercase letters, numbers, and hyphens.')
 assert(!manifest.id.includes('obsidian'), 'manifest.id must not contain "obsidian".')
+assert(!manifest.id.endsWith('plugin'), 'manifest.id must not end with "plugin".')
 assert(/^\d+\.\d+\.\d+$/.test(manifest.version), 'manifest.version must use x.y.z semver format.')
 assert(manifest.version === pkg.version, 'manifest.json version must match package.json version.')
 assert(versions[manifest.version] === manifest.minAppVersion, 'versions.json must map the current version to minAppVersion.')
