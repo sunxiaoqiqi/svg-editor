@@ -38,6 +38,9 @@ const I18N = {
     bringToFront: '置于顶层',
     sendToBack: '置于底层',
     copyId: '复制 ID',
+    addText: '文本',
+    addRect: '矩形',
+    addCircle: '圆形',
     backupCreated: '已创建备份',
     inheritedStyleHint: '来自计算样式；编辑后会写入内联属性',
     emptyValue: '(空)',
@@ -58,6 +61,10 @@ const I18N = {
     copiedId: '已复制 ID',
     chars: '字符',
     fileNotFound: 'SVG 文件未找到',
+    insertedText: '已插入文本',
+    insertedRect: '已插入矩形',
+    insertedCircle: '已插入圆形',
+    defaultText: '文本',
     attributeLabels: {
       fill: '填充 fill',
       stroke: '描边 stroke',
@@ -115,6 +122,9 @@ const I18N = {
     bringToFront: 'Bring to front',
     sendToBack: 'Send to back',
     copyId: 'Copy ID',
+    addText: 'Text',
+    addRect: 'Rect',
+    addCircle: 'Circle',
     backupCreated: 'Created backup',
     inheritedStyleHint: 'From computed style; edits will be written inline',
     emptyValue: '(empty)',
@@ -135,6 +145,10 @@ const I18N = {
     copiedId: 'Copied ID',
     chars: 'chars',
     fileNotFound: 'SVG file not found',
+    insertedText: 'Inserted text',
+    insertedRect: 'Inserted rectangle',
+    insertedCircle: 'Inserted circle',
+    defaultText: 'Text',
     attributeLabels: {
       fill: 'Fill',
       stroke: 'Stroke',
@@ -226,8 +240,11 @@ class SvgEditorView extends ItemView {
     this.previewTimer = null
     this.dirty = false
     this.selectedPath = null
+    this.selectedPaths = []
     this.renderedSvg = null
     this.dragState = null
+    this.resizeState = null
+    this.skipNextClick = false
     this.inlineTextEditor = null
     this.undoStack = []
     this.redoStack = []
@@ -276,6 +293,9 @@ class SvgEditorView extends ItemView {
     this.redoButton = actions.createEl('button', { text: this.t('redo') })
     this.saveButton = actions.createEl('button', { text: this.t('save') })
     this.reloadButton = actions.createEl('button', { text: this.t('reload') })
+    this.addTextButton = actions.createEl('button', { text: this.t('addText') })
+    this.addRectButton = actions.createEl('button', { text: this.t('addRect') })
+    this.addCircleButton = actions.createEl('button', { text: this.t('addCircle') })
     this.languageButton = actions.createEl('button', { text: this.t('languageToggle') })
     this.wrapToggle = actions.createEl('button', { text: this.t('wrapOff') })
 
@@ -309,6 +329,7 @@ class SvgEditorView extends ItemView {
       this.data = this.textarea.value
       this.dirty = true
       this.selectedPath = null
+      this.selectedPaths = []
       this.renderLayers(null)
       this.renderInspector(null)
       this.schedulePreview()
@@ -318,6 +339,9 @@ class SvgEditorView extends ItemView {
     this.redoButton.addEventListener('click', () => this.redo())
     this.saveButton.addEventListener('click', () => this.saveFile())
     this.reloadButton.addEventListener('click', () => this.reloadFile())
+    this.addTextButton.addEventListener('click', () => this.insertElement('text'))
+    this.addRectButton.addEventListener('click', () => this.insertElement('rect'))
+    this.addCircleButton.addEventListener('click', () => this.insertElement('circle'))
     this.languageButton.addEventListener('click', () => this.switchLanguage())
 
     this.wrapToggle.addEventListener('click', () => {
@@ -350,6 +374,7 @@ class SvgEditorView extends ItemView {
     this.data = await this.app.vault.read(file)
     this.dirty = false
     this.selectedPath = null
+    this.selectedPaths = []
     this.undoStack = []
     this.redoStack = []
     this.sourceHistorySnapshot = this.data
@@ -377,6 +402,7 @@ class SvgEditorView extends ItemView {
     this.data = await this.app.vault.read(this.file)
     this.dirty = false
     this.selectedPath = null
+    this.selectedPaths = []
     this.undoStack = []
     this.redoStack = []
     this.sourceHistorySnapshot = this.data
@@ -457,6 +483,7 @@ class SvgEditorView extends ItemView {
     this.data = snapshot
     this.dirty = true
     this.selectedPath = null
+    this.selectedPaths = []
     this.sourceHistorySnapshot = snapshot
     if (this.textarea) this.textarea.value = this.data
     this.render()
@@ -590,18 +617,24 @@ class SvgEditorView extends ItemView {
 
   bindPreviewSelection(svg) {
     svg.addEventListener('click', (event) => {
+      if (this.skipNextClick) {
+        this.skipNextClick = false
+        return
+      }
       const target = this.getEventTargetElement(event.target)
       if (!(target instanceof SVGElement) || target.tagName.toLowerCase() === 'svg') {
         this.clearSelection()
         this.renderInspector(null)
         return
       }
-      if (this.dragState && this.dragState.didDrag) return
 
       event.preventDefault()
       event.stopPropagation()
 
-      this.selectedPath = this.getElementPath(target)
+      const path = this.getElementPath(target)
+      if (event.shiftKey || event.ctrlKey || event.metaKey || !this.isPathSelected(path)) {
+        this.selectFromEvent(path, event)
+      }
       this.markSelectedElement(svg, this.selectedPath)
       this.markSelectedLayer()
       this.renderInspector(this.getSelectedElement(), target)
@@ -620,7 +653,7 @@ class SvgEditorView extends ItemView {
       event.preventDefault()
       event.stopPropagation()
 
-      this.selectedPath = this.getElementPath(textTarget)
+      this.setSingleSelection(this.getElementPath(textTarget))
       this.markSelectedElement(svg, this.selectedPath)
       this.markSelectedLayer()
       this.editTextElement(textTarget)
@@ -633,7 +666,9 @@ class SvgEditorView extends ItemView {
       event.preventDefault()
       event.stopPropagation()
 
-      this.selectedPath = this.getElementPath(target)
+      const path = this.getElementPath(target)
+      if (!this.isPathSelected(path)) this.setSingleSelection(path)
+      else this.selectedPath = path
       this.markSelectedElement(svg, this.selectedPath)
       this.markSelectedLayer()
       this.renderInspector(this.getSelectedElement(), target)
@@ -643,6 +678,12 @@ class SvgEditorView extends ItemView {
     svg.addEventListener('pointerdown', (event) => {
       if (this.inlineTextEditor) this.closeInlineTextEditor(true)
 
+      const resizeHandle = event.target instanceof SVGElement ? event.target.getAttribute('data-editor-resize-handle') : ''
+      if (resizeHandle) {
+        this.startResize(svg, event, resizeHandle)
+        return
+      }
+
       const target = this.getEventTargetElement(event.target)
       if (!(target instanceof SVGElement) || target.tagName.toLowerCase() === 'svg') return
       if (event.button !== 0) return
@@ -650,19 +691,34 @@ class SvgEditorView extends ItemView {
       event.preventDefault()
       event.stopPropagation()
 
-      this.selectedPath = this.getElementPath(target)
+      const path = this.getElementPath(target)
+      if (event.shiftKey || event.ctrlKey || event.metaKey) {
+        this.selectFromEvent(path, event)
+        this.markSelectedElement(svg, this.selectedPath)
+        this.markSelectedLayer()
+        this.renderInspector(this.getSelectedElement(), this.getRenderedSelectedElement())
+        return
+      }
+
+      if (!this.isPathSelected(path)) this.setSingleSelection(path)
+      else this.selectedPath = path
       this.markSelectedElement(svg, this.selectedPath)
       this.markSelectedLayer()
 
       const point = this.getSvgPoint(svg, event)
+      const paths = this.selectedPaths.length ? this.selectedPaths.map((selected) => [...selected]) : [[...this.selectedPath]]
       this.dragState = {
-        path: this.selectedPath,
-        element: target,
+        paths,
+        elements: paths
+          .map((selectedPath) => {
+            const element = this.findElementByPath(svg, selectedPath)
+            return element ? { path: selectedPath, element, originalTransform: element.getAttribute('transform') || '' } : null
+          })
+          .filter(Boolean),
         startX: point.x,
         startY: point.y,
         dx: 0,
         dy: 0,
-        originalTransform: target.getAttribute('transform') || '',
         didDrag: false,
       }
 
@@ -673,6 +729,11 @@ class SvgEditorView extends ItemView {
     })
 
     svg.addEventListener('pointermove', (event) => {
+      if (this.resizeState) {
+        this.updateResizePreview(svg, event)
+        return
+      }
+
       if (!this.dragState) return
 
       event.preventDefault()
@@ -684,18 +745,25 @@ class SvgEditorView extends ItemView {
       this.dragState.dx = dx
       this.dragState.dy = dy
 
-      this.dragState.element.setAttribute(
-        'transform',
-        this.composeTranslatedTransform(this.dragState.originalTransform, dx, dy)
-      )
-      this.renderInspector(this.getSelectedElement(), this.dragState.element)
+      for (const item of this.dragState.elements) {
+        item.element.setAttribute('transform', this.composeTranslatedTransform(item.originalTransform, dx, dy))
+      }
+      this.renderInspector(this.getSelectedElement(), this.getRenderedSelectedElement())
     })
 
     svg.addEventListener('pointerup', (event) => {
+      if (this.resizeState) {
+        this.finishResize(event)
+        return
+      }
       this.finishDrag(event)
     })
 
     svg.addEventListener('pointercancel', (event) => {
+      if (this.resizeState) {
+        this.finishResize(event)
+        return
+      }
       this.finishDrag(event)
     })
   }
@@ -705,7 +773,7 @@ class SvgEditorView extends ItemView {
     overlayLayer.classList.add('svg-editor-hit-overlays')
 
     const candidates = Array.from(svg.querySelectorAll('path,line,polyline,polygon'))
-      .filter((element) => !element.closest('.svg-editor-hit-overlays'))
+      .filter((element) => !element.closest('.svg-editor-hit-overlays') && !element.closest('.svg-editor-selection-controls'))
 
     for (const element of candidates) {
       const path = this.getElementPath(element)
@@ -743,9 +811,10 @@ class SvgEditorView extends ItemView {
     const state = this.dragState
     this.dragState = null
 
-    if (state.element && event && typeof state.element.releasePointerCapture === 'function') {
+    const captureTarget = event?.target
+    if (captureTarget && typeof captureTarget.releasePointerCapture === 'function') {
       try {
-        state.element.releasePointerCapture(event.pointerId)
+        captureTarget.releasePointerCapture(event.pointerId)
       } catch {
         // Pointer capture may already be released by the browser.
       }
@@ -755,12 +824,10 @@ class SvgEditorView extends ItemView {
       this.renderInspector(this.getSelectedElement(), this.getRenderedSelectedElement())
       return
     }
+    this.skipNextClick = true
 
-    this.updateSelectedElement((selected) => {
-      selected.setAttribute(
-        'transform',
-        this.composeTranslatedTransform(state.originalTransform, state.dx, state.dy)
-      )
+    this.updateElementsByPaths(state.elements, (selected, item) => {
+      selected.setAttribute('transform', this.composeTranslatedTransform(item.originalTransform, state.dx, state.dy))
     })
   }
 
@@ -774,6 +841,32 @@ class SvgEditorView extends ItemView {
 
     const transformed = point.matrixTransform(matrix.inverse())
     return { x: transformed.x, y: transformed.y }
+  }
+
+  getLocalPoint(element, event, inverseMatrix) {
+    const svg = element.ownerSVGElement || this.renderedSvg
+    if (!svg) return { x: event.clientX, y: event.clientY }
+
+    const point = svg.createSVGPoint()
+    point.x = event.clientX
+    point.y = event.clientY
+
+    if (inverseMatrix) {
+      const transformed = point.matrixTransform(inverseMatrix)
+      return { x: transformed.x, y: transformed.y }
+    }
+
+    const matrix = element.getCTM()
+    if (!matrix) return this.getSvgPoint(svg, event)
+
+    const transformed = point.matrixTransform(matrix.inverse())
+    return { x: transformed.x, y: transformed.y }
+  }
+
+  clampScale(value) {
+    if (!Number.isFinite(value)) return 1
+    const sign = value < 0 ? -1 : 1
+    return sign * Math.max(0.05, Math.min(20, Math.abs(value)))
   }
 
   composeTranslatedTransform(originalTransform, dx, dy) {
@@ -794,10 +887,52 @@ class SvgEditorView extends ItemView {
     return trimmed ? `${trimmed} ${translate}` : translate
   }
 
+  composeScaledTransform(originalTransform, originX, originY, sx, sy) {
+    const trimmed = (originalTransform || '').trim()
+    const transform = `translate(${this.formatNumber(originX)} ${this.formatNumber(originY)}) scale(${this.formatNumber(sx)} ${this.formatNumber(sy)}) translate(${this.formatNumber(-originX)} ${this.formatNumber(-originY)})`
+    return trimmed ? `${trimmed} ${transform}` : transform
+  }
+
   clearSelection() {
     this.selectedPath = null
+    this.selectedPaths = []
     if (this.renderedSvg) this.markSelectedElement(this.renderedSvg, null)
     this.markSelectedLayer()
+  }
+
+  pathKey(path) {
+    return Array.isArray(path) ? path.join('.') : ''
+  }
+
+  samePath(a, b) {
+    return this.pathKey(a) === this.pathKey(b)
+  }
+
+  setSingleSelection(path) {
+    this.selectedPath = path
+    this.selectedPaths = path ? [path] : []
+  }
+
+  toggleSelection(path) {
+    const key = this.pathKey(path)
+    const index = this.selectedPaths.findIndex((selected) => this.pathKey(selected) === key)
+    if (index >= 0) {
+      this.selectedPaths.splice(index, 1)
+      this.selectedPath = this.selectedPaths[this.selectedPaths.length - 1] || null
+    } else {
+      this.selectedPaths.push(path)
+      this.selectedPath = path
+    }
+  }
+
+  isPathSelected(path) {
+    const key = this.pathKey(path)
+    return this.selectedPaths.some((selected) => this.pathKey(selected) === key)
+  }
+
+  selectFromEvent(path, event) {
+    if (event.shiftKey || event.ctrlKey || event.metaKey) this.toggleSelection(path)
+    else this.setSingleSelection(path)
   }
 
   getElementPath(element) {
@@ -807,7 +942,7 @@ class SvgEditorView extends ItemView {
     while (current && current instanceof SVGElement && current.tagName.toLowerCase() !== 'svg') {
       const parent = current.parentElement
       if (!parent) break
-      const children = Array.from(parent.children).filter((child) => !child.classList.contains('svg-editor-hit-overlays'))
+      const children = Array.from(parent.children).filter((child) => !this.isEditorOverlay(child))
       path.unshift(children.indexOf(current))
       current = parent
     }
@@ -818,20 +953,176 @@ class SvgEditorView extends ItemView {
   findElementByPath(root, path) {
     let current = root
     for (const index of path || []) {
-      const children = Array.from(current.children).filter((child) => !child.classList.contains('svg-editor-hit-overlays'))
+      const children = Array.from(current.children).filter((child) => !this.isEditorOverlay(child))
       current = children[index]
       if (!current) return null
     }
     return current
   }
 
+  isEditorOverlay(element) {
+    return element.classList.contains('svg-editor-hit-overlays') || element.classList.contains('svg-editor-selection-controls')
+  }
+
   markSelectedElement(svg, path) {
     svg.querySelectorAll('.svg-editor-selected-element').forEach((element) => {
       element.classList.remove('svg-editor-selected-element')
     })
+    svg.querySelectorAll('.svg-editor-selection-controls').forEach((element) => element.remove())
 
+    const paths = this.selectedPaths.length ? this.selectedPaths : path ? [path] : []
+    for (const selectedPath of paths) {
+      const selected = this.findElementByPath(svg, selectedPath)
+      if (selected) selected.classList.add('svg-editor-selected-element')
+    }
+
+    if (paths.length === 1) this.renderResizeControls(svg, paths[0])
+  }
+
+  renderResizeControls(svg, path) {
     const selected = this.findElementByPath(svg, path)
-    if (selected) selected.classList.add('svg-editor-selected-element')
+    if (!selected || selected.tagName.toLowerCase() === 'svg') return
+    if (typeof selected.getBBox !== 'function') return
+
+    let box
+    try {
+      box = selected.getBBox()
+    } catch {
+      return
+    }
+
+    if (!Number.isFinite(box.x) || !Number.isFinite(box.y)) return
+    const width = Math.max(box.width, 1)
+    const height = Math.max(box.height, 1)
+    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+    group.classList.add('svg-editor-selection-controls')
+    group.setAttribute('data-editor-target-path', path.join('.'))
+    const transform = selected.getAttribute('transform')
+    if (transform) group.setAttribute('transform', transform)
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+    rect.setAttribute('x', String(box.x))
+    rect.setAttribute('y', String(box.y))
+    rect.setAttribute('width', String(width))
+    rect.setAttribute('height', String(height))
+    rect.classList.add('svg-editor-selection-box')
+    group.appendChild(rect)
+
+    const handles = [
+      ['nw', box.x, box.y],
+      ['ne', box.x + width, box.y],
+      ['sw', box.x, box.y + height],
+      ['se', box.x + width, box.y + height],
+    ]
+
+    for (const [handle, x, y] of handles) {
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+      circle.setAttribute('cx', String(x))
+      circle.setAttribute('cy', String(y))
+      circle.setAttribute('r', '6')
+      circle.setAttribute('data-editor-resize-handle', handle)
+      circle.classList.add('svg-editor-resize-handle', `is-${handle}`)
+      group.appendChild(circle)
+    }
+
+    svg.appendChild(group)
+  }
+
+  startResize(svg, event, handle) {
+    if (!this.selectedPath || this.selectedPaths.length !== 1) return
+    const element = this.getRenderedSelectedElement()
+    if (!element || typeof element.getBBox !== 'function') return
+
+    let box
+    try {
+      box = element.getBBox()
+    } catch {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const matrix = element.getCTM()
+    const inverseMatrix = matrix ? matrix.inverse() : null
+    const start = this.getLocalPoint(element, event, inverseMatrix)
+    const origin = {
+      x: handle.includes('w') ? box.x + box.width : box.x,
+      y: handle.includes('n') ? box.y + box.height : box.y,
+    }
+
+    this.resizeState = {
+      path: [...this.selectedPath],
+      element,
+      handle,
+      startX: start.x,
+      startY: start.y,
+      originX: origin.x,
+      originY: origin.y,
+      originalTransform: element.getAttribute('transform') || '',
+      nextTransform: element.getAttribute('transform') || '',
+      inverseMatrix,
+      didResize: false,
+    }
+
+    const captureTarget = event.target
+    if (captureTarget && typeof captureTarget.setPointerCapture === 'function') {
+      captureTarget.setPointerCapture(event.pointerId)
+    }
+  }
+
+  updateResizePreview(svg, event) {
+    if (!this.resizeState) return
+    event.preventDefault()
+
+    const state = this.resizeState
+    const point = this.getLocalPoint(state.element, event, state.inverseMatrix)
+    const sxBase = state.startX - state.originX
+    const syBase = state.startY - state.originY
+    if (Math.abs(sxBase) < 0.01 || Math.abs(syBase) < 0.01) return
+
+    let sx = (point.x - state.originX) / sxBase
+    let sy = (point.y - state.originY) / syBase
+    if (event.shiftKey) {
+      const uniform = Math.max(Math.abs(sx), Math.abs(sy))
+      sx = Math.sign(sx || 1) * uniform
+      sy = Math.sign(sy || 1) * uniform
+    }
+
+    sx = this.clampScale(sx)
+    sy = this.clampScale(sy)
+    if (Math.abs(sx - 1) > 0.01 || Math.abs(sy - 1) > 0.01) state.didResize = true
+
+    state.nextTransform = this.composeScaledTransform(state.originalTransform, state.originX, state.originY, sx, sy)
+    state.element.setAttribute('transform', state.nextTransform)
+    const controls = svg.querySelector('.svg-editor-selection-controls')
+    if (controls) controls.setAttribute('transform', state.nextTransform)
+    this.renderInspector(this.getSelectedElement(), state.element)
+  }
+
+  finishResize(event) {
+    if (!this.resizeState) return
+    const state = this.resizeState
+    this.resizeState = null
+
+    const captureTarget = event?.target
+    if (captureTarget && typeof captureTarget.releasePointerCapture === 'function') {
+      try {
+        captureTarget.releasePointerCapture(event.pointerId)
+      } catch {
+        // Pointer capture may already be released by the browser.
+      }
+    }
+
+    if (!state.didResize) {
+      this.renderInspector(this.getSelectedElement(), this.getRenderedSelectedElement())
+      return
+    }
+
+    this.skipNextClick = true
+    this.updateSelectedElement((selected) => {
+      selected.setAttribute('transform', state.nextTransform)
+    })
   }
 
   renderLayers(svg) {
@@ -861,16 +1152,15 @@ class SvgEditorView extends ItemView {
     const label = this.getLayerLabel(element)
     if (label) row.createSpan({ cls: 'svg-editor-layer-label', text: label })
 
-    row.addEventListener('click', () => {
+    row.addEventListener('click', (event) => {
       if (tag === 'svg') {
-        this.selectedPath = null
-        this.markSelectedElement(this.renderedSvg, null)
+        this.clearSelection()
         this.markSelectedLayer()
         this.renderInspector(null)
         return
       }
 
-      this.selectedPath = path
+      this.selectFromEvent(path, event)
       this.markSelectedElement(this.renderedSvg, this.selectedPath)
       this.markSelectedLayer()
       this.renderInspector(this.getSelectedElement(), this.getRenderedSelectedElement())
@@ -881,7 +1171,8 @@ class SvgEditorView extends ItemView {
       event.stopPropagation()
 
       if (tag === 'svg') return
-      this.selectedPath = path
+      if (!this.isPathSelected(path)) this.setSingleSelection(path)
+      else this.selectedPath = path
       this.markSelectedElement(this.renderedSvg, this.selectedPath)
       this.markSelectedLayer()
       this.renderInspector(this.getSelectedElement(), this.getRenderedSelectedElement())
@@ -908,10 +1199,10 @@ class SvgEditorView extends ItemView {
 
   markSelectedLayer() {
     if (!this.layers) return
-    const selectedKey = this.selectedPath ? this.selectedPath.join('.') : ''
+    const selectedKeys = new Set(this.selectedPaths.map((path) => this.pathKey(path)))
 
     this.layers.querySelectorAll('.svg-editor-layer-row').forEach((row) => {
-      row.classList.toggle('is-selected', row.dataset.path === selectedKey)
+      row.classList.toggle('is-selected', selectedKeys.has(row.dataset.path || ''))
     })
   }
 
@@ -925,6 +1216,11 @@ class SvgEditorView extends ItemView {
   getRenderedSelectedElement() {
     if (!this.selectedPath || !this.renderedSvg) return null
     return this.findElementByPath(this.renderedSvg, this.selectedPath)
+  }
+
+  getRenderedElementByPath(path) {
+    if (!path || !this.renderedSvg) return null
+    return this.findElementByPath(this.renderedSvg, path)
   }
 
   renderInspector(element, renderedElement) {
@@ -1317,6 +1613,79 @@ class SvgEditorView extends ItemView {
     return tag === 'text' || tag === 'tspan' || tag === 'textpath'
   }
 
+  insertElement(type) {
+    const before = this.data
+    const doc = this.parseSvgDocument()
+    if (!doc) return
+
+    const root = doc.documentElement
+    const metrics = this.getSvgMetrics(root)
+    const centerX = metrics.x + metrics.width / 2
+    const centerY = metrics.y + metrics.height / 2
+    const element = doc.createElementNS('http://www.w3.org/2000/svg', type)
+
+    if (type === 'text') {
+      element.setAttribute('x', this.formatNumber(centerX))
+      element.setAttribute('y', this.formatNumber(centerY))
+      element.setAttribute('fill', '#111827')
+      element.setAttribute('font-size', '32')
+      element.setAttribute('font-family', 'Arial, sans-serif')
+      element.textContent = this.t('defaultText')
+    } else if (type === 'rect') {
+      element.setAttribute('x', this.formatNumber(centerX - 60))
+      element.setAttribute('y', this.formatNumber(centerY - 40))
+      element.setAttribute('width', '120')
+      element.setAttribute('height', '80')
+      element.setAttribute('fill', 'none')
+      element.setAttribute('stroke', '#2563eb')
+      element.setAttribute('stroke-width', '2')
+    } else if (type === 'circle') {
+      element.setAttribute('cx', this.formatNumber(centerX))
+      element.setAttribute('cy', this.formatNumber(centerY))
+      element.setAttribute('r', '48')
+      element.setAttribute('fill', 'none')
+      element.setAttribute('stroke', '#2563eb')
+      element.setAttribute('stroke-width', '2')
+    } else {
+      return
+    }
+
+    const nextIndex = root.children.length
+    root.appendChild(element)
+    const next = new XMLSerializer().serializeToString(root)
+    if (next === before) return
+
+    this.pushHistory(before)
+    this.data = next
+    this.dirty = true
+    this.sourceHistorySnapshot = this.data
+    this.setSingleSelection([nextIndex])
+    if (this.textarea) this.textarea.value = this.data
+    this.render()
+
+    const noticeKey = type === 'text' ? 'insertedText' : type === 'rect' ? 'insertedRect' : 'insertedCircle'
+    new Notice(this.t(noticeKey))
+  }
+
+  getSvgMetrics(root) {
+    const viewBox = root.getAttribute('viewBox')
+    if (viewBox) {
+      const parts = viewBox.split(/[\s,]+/).map((part) => Number(part)).filter((part) => Number.isFinite(part))
+      if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+        return { x: parts[0], y: parts[1], width: parts[2], height: parts[3] }
+      }
+    }
+
+    const width = Number.parseFloat(root.getAttribute('width') || '')
+    const height = Number.parseFloat(root.getAttribute('height') || '')
+    return {
+      x: 0,
+      y: 0,
+      width: Number.isFinite(width) && width > 0 ? width : 800,
+      height: Number.isFinite(height) && height > 0 ? height : 450,
+    }
+  }
+
   updateSelectedElement(mutator) {
     if (!this.selectedPath) return
     const before = this.data
@@ -1327,6 +1696,28 @@ class SvgEditorView extends ItemView {
     if (!selected) return
 
     mutator(selected)
+
+    const next = new XMLSerializer().serializeToString(doc.documentElement)
+    if (next === before) return
+
+    this.pushHistory(before)
+    this.data = next
+    this.dirty = true
+    this.sourceHistorySnapshot = this.data
+    if (this.textarea) this.textarea.value = this.data
+    this.render()
+  }
+
+  updateElementsByPaths(items, mutator) {
+    if (!items || !items.length) return
+    const before = this.data
+    const doc = this.parseSvgDocument()
+    if (!doc) return
+
+    for (const item of items) {
+      const selected = this.findElementByPath(doc.documentElement, item.path)
+      if (selected) mutator(selected, item)
+    }
 
     const next = new XMLSerializer().serializeToString(doc.documentElement)
     if (next === before) return
@@ -1372,7 +1763,7 @@ class SvgEditorView extends ItemView {
 
       const nextPath = [...this.selectedPath]
       nextPath[nextPath.length - 1] += 1
-      this.selectedPath = nextPath
+      this.setSingleSelection(nextPath)
     })
   }
 
@@ -1382,7 +1773,7 @@ class SvgEditorView extends ItemView {
       if (!parent) return
 
       parent.removeChild(selected)
-      this.selectedPath = null
+      this.setSingleSelection(null)
     })
   }
 
@@ -1404,7 +1795,7 @@ class SvgEditorView extends ItemView {
 
       const nextPath = [...this.selectedPath]
       nextPath[nextPath.length - 1] = targetIndex
-      this.selectedPath = nextPath
+      this.setSingleSelection(nextPath)
     })
   }
 
@@ -1422,18 +1813,29 @@ class SvgEditorView extends ItemView {
         parent.insertBefore(selected, siblings[0])
         const nextPath = [...this.selectedPath]
         nextPath[nextPath.length - 1] = 0
-        this.selectedPath = nextPath
+        this.setSingleSelection(nextPath)
       } else {
         if (index === siblings.length - 1) return
         parent.appendChild(selected)
         const nextPath = [...this.selectedPath]
         nextPath[nextPath.length - 1] = siblings.length - 1
-        this.selectedPath = nextPath
+        this.setSingleSelection(nextPath)
       }
     })
   }
 
   nudgeSelectedElement(dx, dy) {
+    if (this.selectedPaths.length > 1) {
+      const items = this.selectedPaths.map((path) => {
+        const element = this.getRenderedElementByPath(path)
+        return { path, originalTransform: element?.getAttribute('transform') || '' }
+      })
+      this.updateElementsByPaths(items, (selected, item) => {
+        selected.setAttribute('transform', this.composeTranslatedTransform(item.originalTransform, dx, dy))
+      })
+      return
+    }
+
     this.updateSelectedElement((selected) => {
       const originalTransform = selected.getAttribute('transform') || ''
       selected.setAttribute('transform', this.composeTranslatedTransform(originalTransform, dx, dy))

@@ -25,7 +25,9 @@
 .svg-editor-actions {
   display: flex;
   flex: none;
+  flex-wrap: wrap;
   gap: 8px;
+  justify-content: flex-end;
 }
 
 .svg-editor-actions button:disabled {
@@ -178,6 +180,33 @@
 .svg-editor-preview .svg-editor-hit-overlays * {
   cursor: pointer;
   opacity: 0;
+}
+
+.svg-editor-preview .svg-editor-selection-controls {
+  pointer-events: none;
+}
+
+.svg-editor-preview .svg-editor-selection-box {
+  fill: rgba(37, 99, 235, 0.06);
+  pointer-events: none;
+  stroke: #2563eb;
+  stroke-dasharray: 6 4;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.svg-editor-preview .svg-editor-resize-handle {
+  cursor: nwse-resize;
+  fill: #ffffff;
+  pointer-events: all;
+  stroke: #2563eb;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.svg-editor-preview .svg-editor-resize-handle.is-ne,
+.svg-editor-preview .svg-editor-resize-handle.is-sw {
+  cursor: nesw-resize;
 }
 
 .svg-editor-inspector {

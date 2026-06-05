@@ -18,6 +18,9 @@ Use this checklist before publishing a GitHub release or submitting to the Obsid
 - [ ] Edit `fill`, `stroke`, text, and opacity from the inspector.
 - [ ] Double-click text and edit it inline.
 - [ ] Drag a text, rect, and path element.
+- [ ] Shift-click or Ctrl-click multiple elements, then drag them together.
+- [ ] Resize one selected text, rect, and circle with canvas handles.
+- [ ] Insert a text, rectangle, and circle element.
 - [ ] Select a thin path such as `svg_72`.
 - [ ] Use duplicate, delete, up/down, front/back commands.
 - [ ] Use `Ctrl+Z`, `Ctrl+Y`, and `Ctrl+S`.
