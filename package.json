@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Edit SVG files in Obsidian with source, layers, canvas, and inspector panes.",
   "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sunxiaoqiqi/svg-editor.git"
+  },
   "scripts": {
     "build": "node --check src/main.js && node esbuild.config.mjs production",
     "dev": "node esbuild.config.mjs",

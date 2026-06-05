@@ -26,7 +26,7 @@ Use this checklist before publishing a GitHub release or submitting to the Obsid
 ## Obsidian Submission
 
 - [ ] GitHub repository is public.
-- [ ] Repository URL is finalized for the community plugin PR.
+- [ ] Repository URL is finalized for the community plugin PR: `sunxiaoqiqi/svg-editor`.
 - [ ] Repository root contains `manifest.json`, `README.md`, `LICENSE`, and `versions.json`.
 - [ ] README documents file access, backup behavior, network behavior, and privacy.
 - [ ] GitHub release tag matches `manifest.json` version.
@@ -42,6 +42,6 @@ Suggested `community-plugins.json` entry:
   "name": "SVG Editor",
   "author": "suntinglu777",
   "description": "Edit SVG files in Obsidian with source, layers, canvas, and inspector panes.",
-  "repo": "suntinglu777/obsidian-svg-editor"
+  "repo": "sunxiaoqiqi/svg-editor"
 }
 ```
