@@ -3,6 +3,7 @@ const { ItemView, Menu, Notice, Plugin, TFile } = require('obsidian')
 const VIEW_TYPE_SVG_EDITOR = 'svg-editor-view'
 const DEFAULT_SETTINGS = {
   language: 'zh',
+  sourceCollapsed: false,
 }
 
 const I18N = {
@@ -16,6 +17,8 @@ const I18N = {
     reload: '重载',
     wrapOn: '换行：开',
     wrapOff: '换行：关',
+    collapseSource: '收起源码',
+    expandSource: '展开源码',
     languageToggle: 'English',
     source: '源码',
     layers: '图层',
@@ -100,6 +103,8 @@ const I18N = {
     reload: 'Reload',
     wrapOn: 'Wrap: On',
     wrapOff: 'Wrap: Off',
+    collapseSource: 'Hide source',
+    expandSource: 'Show source',
     languageToggle: '中文',
     source: 'Source',
     layers: 'Layers',
@@ -229,6 +234,11 @@ module.exports = class SvgEditorPlugin extends Plugin {
     this.settings.language = this.settings.language === 'zh' ? 'en' : 'zh'
     await this.saveData(this.settings)
   }
+
+  async toggleSourceCollapsed() {
+    this.settings.sourceCollapsed = !this.settings.sourceCollapsed
+    await this.saveData(this.settings)
+  }
 }
 
 class SvgEditorView extends ItemView {
@@ -251,6 +261,8 @@ class SvgEditorView extends ItemView {
     this.historyLimit = 50
     this.sourceHistoryTimer = null
     this.sourceHistorySnapshot = ''
+    this.bodyEl = null
+    this.sourceToggleButton = null
   }
 
   t(key) {
@@ -296,10 +308,12 @@ class SvgEditorView extends ItemView {
     this.addTextButton = actions.createEl('button', { text: this.t('addText') })
     this.addRectButton = actions.createEl('button', { text: this.t('addRect') })
     this.addCircleButton = actions.createEl('button', { text: this.t('addCircle') })
+    this.sourceToggleButton = actions.createEl('button', { text: this.getSourceToggleLabel() })
     this.languageButton = actions.createEl('button', { text: this.t('languageToggle') })
     this.wrapToggle = actions.createEl('button', { text: this.t('wrapOff') })
 
     const body = root.createDiv({ cls: 'svg-editor-body' })
+    this.bodyEl = body
     const sourcePane = body.createDiv({ cls: 'svg-editor-pane svg-editor-source-pane' })
     const layersPane = body.createDiv({ cls: 'svg-editor-pane svg-editor-layers-pane' })
     const canvasPane = body.createDiv({ cls: 'svg-editor-pane svg-editor-canvas-pane' })
@@ -342,6 +356,7 @@ class SvgEditorView extends ItemView {
     this.addTextButton.addEventListener('click', () => this.insertElement('text'))
     this.addRectButton.addEventListener('click', () => this.insertElement('rect'))
     this.addCircleButton.addEventListener('click', () => this.insertElement('circle'))
+    this.sourceToggleButton.addEventListener('click', () => this.toggleSourcePane())
     this.languageButton.addEventListener('click', () => this.switchLanguage())
 
     this.wrapToggle.addEventListener('click', () => {
@@ -352,8 +367,29 @@ class SvgEditorView extends ItemView {
 
     root.addEventListener('keydown', (event) => this.handleKeydown(event))
 
+    this.applySourcePaneState()
     this.render()
     this.updateHistoryButtons()
+  }
+
+  getSourceToggleLabel() {
+    return this.plugin.settings?.sourceCollapsed ? this.t('expandSource') : this.t('collapseSource')
+  }
+
+  async toggleSourcePane() {
+    if (this.textarea) this.data = this.textarea.value
+    await this.plugin.toggleSourceCollapsed()
+    this.applySourcePaneState()
+  }
+
+  applySourcePaneState() {
+    const collapsed = Boolean(this.plugin.settings?.sourceCollapsed)
+    if (this.bodyEl) this.bodyEl.classList.toggle('is-source-collapsed', collapsed)
+    if (this.sourceToggleButton) {
+      this.sourceToggleButton.setText(this.getSourceToggleLabel())
+      this.sourceToggleButton.setAttribute('aria-pressed', String(collapsed))
+    }
+    if (this.wrapToggle) this.wrapToggle.disabled = collapsed
   }
 
   async switchLanguage() {

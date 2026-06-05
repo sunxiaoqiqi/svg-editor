@@ -42,6 +42,7 @@ for (const file of requiredReleaseAssets) assertFile(file)
 const manifest = readJson('manifest.json')
 const pkg = readJson('package.json')
 const versions = readJson('versions.json')
+const releaseDir = path.join(root, 'release', `v${manifest.version}`)
 
 assert(/^[a-z0-9-]+$/.test(manifest.id), 'manifest.id must use lowercase letters, numbers, and hyphens.')
 assert(!manifest.id.includes('obsidian'), 'manifest.id must not contain "obsidian".')
@@ -54,6 +55,17 @@ assert(manifest.author === 'suntinglu777', 'manifest author must be suntinglu777
 const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8')
 for (const phrase of ['File Access', 'Network Access', '.bak']) {
   assert(readme.includes(phrase), `README.md must document ${phrase}.`)
+}
+
+assert(fs.existsSync(releaseDir), `Missing release asset directory: ${path.relative(root, releaseDir)}`)
+for (const file of requiredReleaseAssets) {
+  const rootAsset = path.join(root, file)
+  const releaseAsset = path.join(releaseDir, file)
+  assert(fs.existsSync(releaseAsset), `Missing release asset: ${path.relative(root, releaseAsset)}`)
+  assert(
+    fs.readFileSync(rootAsset).equals(fs.readFileSync(releaseAsset)),
+    `Release asset is stale: ${path.relative(root, releaseAsset)}`
+  )
 }
 
 const sourceFiles = walk(path.join(root, 'src')).filter((file) => file.endsWith('.js'))

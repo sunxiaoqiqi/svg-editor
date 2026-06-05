@@ -42,6 +42,14 @@
   min-height: 0;
 }
 
+.svg-editor-body.is-source-collapsed {
+  grid-template-columns: 230px minmax(480px, 1fr) 280px;
+}
+
+.svg-editor-body.is-source-collapsed .svg-editor-source-pane {
+  display: none;
+}
+
 .svg-editor-pane {
   display: flex;
   flex-direction: column;
@@ -407,6 +415,10 @@
   .svg-editor-body {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(220px, 0.9fr) 220px minmax(260px, 1fr) 320px;
+  }
+
+  .svg-editor-body.is-source-collapsed {
+    grid-template-rows: 220px minmax(320px, 1fr) 320px;
   }
 
   .svg-editor-source-pane,
