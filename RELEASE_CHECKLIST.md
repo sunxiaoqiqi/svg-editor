@@ -10,11 +10,14 @@ Use this checklist before publishing a GitHub release or submitting to the Obsid
 - [ ] `npm run release:check`
 - [ ] Confirm `manifest.json` version matches `package.json`.
 - [ ] Confirm release assets include `main.js`, `manifest.json`, and `styles.css`.
+- [ ] Confirm release assets in `release/v0.1.0` match the root build output.
 
 ## Manual Smoke Test
 
 - [ ] Open an `.svg` file from the file menu.
 - [ ] Select elements on the canvas and in the layer tree.
+- [ ] Collapse and expand the Source pane.
+- [ ] Confirm large SVGs show horizontal and vertical canvas scrollbars when needed.
 - [ ] Edit `fill`, `stroke`, text, and opacity from the inspector.
 - [ ] Double-click text and edit it inline.
 - [ ] Drag a text, rect, and path element.

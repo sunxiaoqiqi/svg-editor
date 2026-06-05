@@ -43,6 +43,8 @@ npm run release:check
 
 - Open an `.svg` file from the file menu.
 - Select elements on the canvas and in the layer tree.
+- Collapse and expand the Source pane.
+- Confirm large SVGs can be inspected with canvas scrollbars.
 - Edit fill, stroke, opacity, and text.
 - Double-click text and edit it inline.
 - Drag a text, rect, and path element.
