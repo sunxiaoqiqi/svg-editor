@@ -1,6 +1,6 @@
-# SVG Editor 0.1.0
+# SVG Canvas Editor 0.1.0
 
-Initial release of SVG Editor for Obsidian.
+Initial release of SVG Canvas Editor for Obsidian.
 
 ## Highlights
 

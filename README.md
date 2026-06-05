@@ -1,8 +1,8 @@
-﻿# SVG Editor
+# SVG Canvas Editor
 
 Edit SVG files directly inside Obsidian.
 
-SVG Editor adds a visual SVG workspace to your vault, with source editing, live preview, layers, canvas selection, an inspector, undo/redo, and simple element operations.
+SVG Canvas Editor adds a visual SVG workspace to your vault, with source editing, live preview, layers, canvas selection, an inspector, undo/redo, and simple element operations.
 
 ## Features
 
@@ -24,7 +24,7 @@ SVG Editor adds a visual SVG workspace to your vault, with source editing, live 
 
 ## Usage
 
-Right-click an `.svg` file in Obsidian and choose **Open in SVG Editor**.
+Right-click an `.svg` file in Obsidian and choose **Open in SVG Canvas Editor**.
 
 The editor has four main areas:
 
@@ -51,7 +51,7 @@ The plugin stores local editor preferences, such as the UI language and whether 
 
 ## Network Access And Privacy
 
-SVG Editor does not make network requests and does not collect, transmit, or store user data outside the vault.
+SVG Canvas Editor does not make network requests and does not collect, transmit, or store user data outside the vault.
 
 All editing happens locally inside Obsidian. SVG content stays in the user's vault unless the user syncs or publishes the vault through their own tools.
 

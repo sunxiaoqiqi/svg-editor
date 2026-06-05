@@ -14,8 +14,8 @@ Add this object to `community-plugins.json`:
 
 ```json
 {
-  "id": "svg-editor",
-  "name": "SVG Editor",
+  "id": "svg-canvas-editor",
+  "name": "SVG Canvas Editor",
   "author": "suntinglu777",
   "description": "Edit SVG files in Obsidian with source, layers, canvas, and inspector panes.",
   "repo": "sunxiaoqiqi/svg-editor"

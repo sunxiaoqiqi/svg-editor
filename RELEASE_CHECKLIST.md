@@ -38,15 +38,15 @@ Use this checklist before publishing a GitHub release or submitting to the Obsid
 - [ ] README documents file access, backup behavior, network behavior, and privacy.
 - [ ] GitHub release tag matches `manifest.json` version.
 - [ ] GitHub release uploads `main.js`, `manifest.json`, and `styles.css` as assets.
-- [ ] Plugin id `svg-editor` is still unique in the community plugin directory.
+- [ ] Plugin id `svg-canvas-editor` is still unique in the community plugin directory.
 - [ ] Open PR to `obsidianmd/obsidian-releases`.
 
 Suggested `community-plugins.json` entry:
 
 ```json
 {
-  "id": "svg-editor",
-  "name": "SVG Editor",
+  "id": "svg-canvas-editor",
+  "name": "SVG Canvas Editor",
   "author": "suntinglu777",
   "description": "Edit SVG files in Obsidian with source, layers, canvas, and inspector panes.",
   "repo": "sunxiaoqiqi/svg-editor"

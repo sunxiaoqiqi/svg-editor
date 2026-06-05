@@ -50,6 +50,8 @@ assert(!manifest.id.endsWith('plugin'), 'manifest.id must not end with "plugin".
 assert(/^\d+\.\d+\.\d+$/.test(manifest.version), 'manifest.version must use x.y.z semver format.')
 assert(manifest.version === pkg.version, 'manifest.json version must match package.json version.')
 assert(versions[manifest.version] === manifest.minAppVersion, 'versions.json must map the current version to minAppVersion.')
+assert(manifest.id === 'svg-canvas-editor', 'manifest id must be svg-canvas-editor.')
+assert(manifest.name === 'SVG Canvas Editor', 'manifest name must be SVG Canvas Editor.')
 assert(manifest.author === 'suntinglu777', 'manifest author must be suntinglu777.')
 
 const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8')

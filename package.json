@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-svg-editor",
+  "name": "obsidian-svg-canvas-editor",
   "version": "0.1.0",
   "description": "Edit SVG files in Obsidian with source, layers, canvas, and inspector panes.",
   "main": "main.js",

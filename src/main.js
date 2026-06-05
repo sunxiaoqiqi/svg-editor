@@ -94,8 +94,8 @@ const I18N = {
     },
   },
   en: {
-    openActiveCommand: 'Open current file in SVG Editor',
-    openFileMenu: 'Open in SVG Editor',
+    openActiveCommand: 'Open current file in SVG Canvas Editor',
+    openFileMenu: 'Open in SVG Canvas Editor',
     ready: 'Ready',
     undo: 'Undo',
     redo: 'Redo',
@@ -274,7 +274,7 @@ class SvgEditorView extends ItemView {
   }
 
   getDisplayText() {
-    return this.file ? this.file.basename : 'SVG Editor'
+    return this.file ? this.file.basename : 'SVG Canvas Editor'
   }
 
   getIcon() {
