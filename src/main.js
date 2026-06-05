@@ -1019,25 +1019,18 @@ class SvgEditorView extends ItemView {
 
   getElementSvgBounds(element) {
     const svg = element.ownerSVGElement || this.renderedSvg
-    if (!svg || typeof element.getBBox !== 'function') return null
+    if (!svg) return null
 
-    let bbox
-    try {
-      bbox = element.getBBox()
-    } catch {
-      return null
-    }
+    const rect = element.getBoundingClientRect()
+    const matrix = svg.getScreenCTM()
+    if (!matrix || rect.width <= 0 || rect.height <= 0) return null
 
-    const matrix = element.getCTM()
-    const rootMatrix = svg.getScreenCTM()
-    if (!matrix || !rootMatrix) return null
-
-    const toSvg = rootMatrix.inverse().multiply(matrix)
+    const toSvg = matrix.inverse()
     const points = [
-      [bbox.x, bbox.y],
-      [bbox.x + bbox.width, bbox.y],
-      [bbox.x, bbox.y + bbox.height],
-      [bbox.x + bbox.width, bbox.y + bbox.height],
+      [rect.left, rect.top],
+      [rect.right, rect.top],
+      [rect.left, rect.bottom],
+      [rect.right, rect.bottom],
     ].map(([x, y]) => {
       const point = svg.createSVGPoint()
       point.x = x
@@ -1314,12 +1307,12 @@ class SvgEditorView extends ItemView {
     const displayValue = attributeValue || computedValue || ''
     const isInherited = !attributeValue && Boolean(computedValue)
 
-    if ((name === 'fill' || name === 'stroke') && this.isEditableColor(displayValue)) {
+    if ((name === 'fill' || name === 'stroke') && this.shouldShowColorInput(displayValue)) {
       const colorInput = controls.createEl('input', {
         cls: 'svg-editor-color-input',
         type: 'color',
       })
-      colorInput.value = this.toHexColor(displayValue)
+      colorInput.value = this.toHexColor(displayValue) || '#2563eb'
       colorInput.addEventListener('input', () => {
         input.value = colorInput.value
         this.updateSelectedElement((selected) => this.setElementValue(selected, name, colorInput.value))
@@ -1404,6 +1397,11 @@ class SvgEditorView extends ItemView {
 
   isEditableColor(value) {
     return this.toHexColor(value) !== ''
+  }
+
+  shouldShowColorInput(value) {
+    const trimmed = (value || '').trim().toLowerCase()
+    return !trimmed || trimmed === 'none' || this.isEditableColor(value)
   }
 
   toHexColor(value) {
