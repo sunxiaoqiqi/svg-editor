@@ -10,6 +10,7 @@ SVG Editor adds a visual SVG workspace to your vault, with source editing, live 
 - Edit SVG source with live preview.
 - Select elements on the canvas or from the layer tree.
 - Edit common attributes such as fill, stroke, opacity, size, position, and text.
+- Switch the editor UI between Chinese and English.
 - Double-click text to edit it inline on the canvas.
 - Drag SVG elements on the canvas.
 - Duplicate, delete, reorder, bring to front, and send to back.

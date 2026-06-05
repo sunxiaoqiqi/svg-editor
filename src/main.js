@@ -1,14 +1,175 @@
 const { ItemView, Menu, Notice, Plugin, TFile } = require('obsidian')
 
 const VIEW_TYPE_SVG_EDITOR = 'svg-editor-view'
+const DEFAULT_SETTINGS = {
+  language: 'zh',
+}
+
+const I18N = {
+  zh: {
+    openActiveCommand: '在 SVG 编辑器中打开当前文件',
+    openFileMenu: '在 SVG 编辑器中打开',
+    ready: '就绪',
+    undo: '撤销',
+    redo: '重做',
+    save: '保存',
+    reload: '重载',
+    wrapOn: '换行：开',
+    wrapOff: '换行：关',
+    languageToggle: 'English',
+    source: '源码',
+    layers: '图层',
+    canvas: '画布',
+    inspector: '属性',
+    noOpenFile: '没有打开 SVG 文件',
+    saved: 'SVG 已保存',
+    savedStatus: '已保存',
+    reloadedStatus: '已重载',
+    unsavedStatus: '未保存',
+    parseError: 'SVG 无法解析，请检查源码中的标签或属性是否完整。',
+    emptyLayers: '没有可用的 SVG 图层树。',
+    inspectorEmpty: '在画布中点击一个元素，即可编辑它的常用 SVG 属性。',
+    duplicate: '复制',
+    delete: '删除',
+    moveUp: '上移',
+    moveDown: '下移',
+    moveUpLayer: '上移一层',
+    moveDownLayer: '下移一层',
+    bringToFront: '置于顶层',
+    sendToBack: '置于底层',
+    copyId: '复制 ID',
+    backupCreated: '已创建备份',
+    inheritedStyleHint: '来自计算样式；编辑后会写入内联属性',
+    emptyValue: '(空)',
+    element: '元素',
+    visualBounds: '视觉边界',
+    computedStyle: '计算样式',
+    type: '类型',
+    children: '子元素',
+    note: '备注',
+    groupSizeNote: '组尺寸来自子元素',
+    pathData: '路径数据',
+    status: '状态',
+    unavailable: '不可用',
+    noComputedStyle: '没有可用的计算样式',
+    textLabel: '文本 text',
+    editText: '编辑文本',
+    noElementId: '当前元素没有 ID',
+    copiedId: '已复制 ID',
+    chars: '字符',
+    fileNotFound: 'SVG 文件未找到',
+    attributeLabels: {
+      fill: '填充 fill',
+      stroke: '描边 stroke',
+      'stroke-width': '描边粗细 stroke-width',
+      opacity: '透明度 opacity',
+      transform: '变换 transform',
+      x: '横坐标 x',
+      y: '纵坐标 y',
+      width: '宽度 width',
+      height: '高度 height',
+      rx: '圆角 X rx',
+      ry: '圆角 Y ry',
+      cx: '圆心 X cx',
+      cy: '圆心 Y cy',
+      r: '半径 r',
+      x1: '起点 X x1',
+      y1: '起点 Y y1',
+      x2: '终点 X x2',
+      y2: '终点 Y y2',
+      'font-size': '字号 font-size',
+      'font-family': '字体 font-family',
+      'font-weight': '字重 font-weight',
+      d: '路径 d',
+    },
+  },
+  en: {
+    openActiveCommand: 'Open current file in SVG Editor',
+    openFileMenu: 'Open in SVG Editor',
+    ready: 'Ready',
+    undo: 'Undo',
+    redo: 'Redo',
+    save: 'Save',
+    reload: 'Reload',
+    wrapOn: 'Wrap: On',
+    wrapOff: 'Wrap: Off',
+    languageToggle: '中文',
+    source: 'Source',
+    layers: 'Layers',
+    canvas: 'Canvas',
+    inspector: 'Inspector',
+    noOpenFile: 'No SVG file is open',
+    saved: 'SVG saved',
+    savedStatus: 'Saved',
+    reloadedStatus: 'Reloaded',
+    unsavedStatus: 'Unsaved',
+    parseError: 'SVG could not be parsed. Check whether the source markup and attributes are complete.',
+    emptyLayers: 'No SVG layer tree is available.',
+    inspectorEmpty: 'Click an element on the canvas to edit its common SVG attributes.',
+    duplicate: 'Duplicate',
+    delete: 'Delete',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+    moveUpLayer: 'Move up one layer',
+    moveDownLayer: 'Move down one layer',
+    bringToFront: 'Bring to front',
+    sendToBack: 'Send to back',
+    copyId: 'Copy ID',
+    backupCreated: 'Created backup',
+    inheritedStyleHint: 'From computed style; edits will be written inline',
+    emptyValue: '(empty)',
+    element: 'Element',
+    visualBounds: 'Visual bounds',
+    computedStyle: 'Computed style',
+    type: 'Type',
+    children: 'Children',
+    note: 'Note',
+    groupSizeNote: 'Group size comes from child elements',
+    pathData: 'Path data',
+    status: 'Status',
+    unavailable: 'Unavailable',
+    noComputedStyle: 'No computed style available',
+    textLabel: 'Text',
+    editText: 'Edit text',
+    noElementId: 'Current element has no ID',
+    copiedId: 'Copied ID',
+    chars: 'chars',
+    fileNotFound: 'SVG file not found',
+    attributeLabels: {
+      fill: 'Fill',
+      stroke: 'Stroke',
+      'stroke-width': 'Stroke width',
+      opacity: 'Opacity',
+      transform: 'Transform',
+      x: 'X',
+      y: 'Y',
+      width: 'Width',
+      height: 'Height',
+      rx: 'Corner X rx',
+      ry: 'Corner Y ry',
+      cx: 'Center X cx',
+      cy: 'Center Y cy',
+      r: 'Radius r',
+      x1: 'Start X x1',
+      y1: 'Start Y y1',
+      x2: 'End X x2',
+      y2: 'End Y y2',
+      'font-size': 'Font size',
+      'font-family': 'Font family',
+      'font-weight': 'Font weight',
+      d: 'Path d',
+    },
+  },
+}
 
 module.exports = class SvgEditorPlugin extends Plugin {
   async onload() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
     this.registerView(VIEW_TYPE_SVG_EDITOR, (leaf) => new SvgEditorView(leaf, this))
 
     this.addCommand({
       id: 'open-active-svg-editor',
-      name: '在 SVG 编辑器中打开当前文件',
+      name: this.t('openActiveCommand'),
       checkCallback: (checking) => {
         const file = this.app.workspace.getActiveFile()
         const canOpen = file instanceof TFile && file.extension.toLowerCase() === 'svg'
@@ -22,7 +183,7 @@ module.exports = class SvgEditorPlugin extends Plugin {
         if (!(file instanceof TFile) || file.extension.toLowerCase() !== 'svg') return
         menu.addItem((item) => {
           item
-            .setTitle('在 SVG 编辑器中打开')
+            .setTitle(this.t('openFileMenu'))
             .setIcon('image')
             .onClick(() => this.openSvgFile(file))
         })
@@ -38,6 +199,21 @@ module.exports = class SvgEditorPlugin extends Plugin {
       state: { file: file.path },
     })
     this.app.workspace.setActiveLeaf(leaf, { focus: true })
+  }
+
+  t(key) {
+    const language = this.settings?.language || DEFAULT_SETTINGS.language
+    return I18N[language]?.[key] || I18N.zh[key] || key
+  }
+
+  attributeLabel(name) {
+    const language = this.settings?.language || DEFAULT_SETTINGS.language
+    return I18N[language]?.attributeLabels?.[name] || I18N.zh.attributeLabels[name] || name
+  }
+
+  async toggleLanguage() {
+    this.settings.language = this.settings.language === 'zh' ? 'en' : 'zh'
+    await this.saveData(this.settings)
   }
 }
 
@@ -58,6 +234,10 @@ class SvgEditorView extends ItemView {
     this.historyLimit = 50
     this.sourceHistoryTimer = null
     this.sourceHistorySnapshot = ''
+  }
+
+  t(key) {
+    return this.plugin.t(key)
   }
 
   getViewType() {
@@ -89,14 +269,15 @@ class SvgEditorView extends ItemView {
     root.addClass('svg-editor-view')
 
     const toolbar = root.createDiv({ cls: 'svg-editor-toolbar' })
-    this.statusEl = toolbar.createDiv({ cls: 'svg-editor-status', text: '就绪' })
+    this.statusEl = toolbar.createDiv({ cls: 'svg-editor-status', text: this.t('ready') })
 
     const actions = toolbar.createDiv({ cls: 'svg-editor-actions' })
-    this.undoButton = actions.createEl('button', { text: '撤销' })
-    this.redoButton = actions.createEl('button', { text: '重做' })
-    this.saveButton = actions.createEl('button', { text: '保存' })
-    this.reloadButton = actions.createEl('button', { text: '重载' })
-    this.wrapToggle = actions.createEl('button', { text: '换行：关' })
+    this.undoButton = actions.createEl('button', { text: this.t('undo') })
+    this.redoButton = actions.createEl('button', { text: this.t('redo') })
+    this.saveButton = actions.createEl('button', { text: this.t('save') })
+    this.reloadButton = actions.createEl('button', { text: this.t('reload') })
+    this.languageButton = actions.createEl('button', { text: this.t('languageToggle') })
+    this.wrapToggle = actions.createEl('button', { text: this.t('wrapOff') })
 
     const body = root.createDiv({ cls: 'svg-editor-body' })
     const sourcePane = body.createDiv({ cls: 'svg-editor-pane svg-editor-source-pane' })
@@ -104,10 +285,10 @@ class SvgEditorView extends ItemView {
     const canvasPane = body.createDiv({ cls: 'svg-editor-pane svg-editor-canvas-pane' })
     const inspectorPane = body.createDiv({ cls: 'svg-editor-pane svg-editor-inspector-pane' })
 
-    sourcePane.createDiv({ cls: 'svg-editor-pane-title', text: '源码' })
-    layersPane.createDiv({ cls: 'svg-editor-pane-title', text: '图层' })
-    canvasPane.createDiv({ cls: 'svg-editor-pane-title', text: '画布' })
-    inspectorPane.createDiv({ cls: 'svg-editor-pane-title', text: '属性' })
+    sourcePane.createDiv({ cls: 'svg-editor-pane-title', text: this.t('source') })
+    layersPane.createDiv({ cls: 'svg-editor-pane-title', text: this.t('layers') })
+    canvasPane.createDiv({ cls: 'svg-editor-pane-title', text: this.t('canvas') })
+    inspectorPane.createDiv({ cls: 'svg-editor-pane-title', text: this.t('inspector') })
 
     this.textarea = sourcePane.createEl('textarea', {
       cls: 'svg-editor-source',
@@ -121,6 +302,7 @@ class SvgEditorView extends ItemView {
     this.layers = layersPane.createDiv({ cls: 'svg-editor-layers' })
     this.preview = canvasPane.createDiv({ cls: 'svg-editor-preview' })
     this.inspector = inspectorPane.createDiv({ cls: 'svg-editor-inspector' })
+    this.textarea.value = this.data
 
     this.textarea.addEventListener('input', () => {
       this.queueSourceHistory()
@@ -136,11 +318,12 @@ class SvgEditorView extends ItemView {
     this.redoButton.addEventListener('click', () => this.redo())
     this.saveButton.addEventListener('click', () => this.saveFile())
     this.reloadButton.addEventListener('click', () => this.reloadFile())
+    this.languageButton.addEventListener('click', () => this.switchLanguage())
 
     this.wrapToggle.addEventListener('click', () => {
       this.textarea.toggleClass('is-wrapped', !this.textarea.hasClass('is-wrapped'))
       const wrapped = this.textarea.hasClass('is-wrapped')
-      this.wrapToggle.setText(wrapped ? '换行：开' : '换行：关')
+      this.wrapToggle.setText(wrapped ? this.t('wrapOn') : this.t('wrapOff'))
     })
 
     root.addEventListener('keydown', (event) => this.handleKeydown(event))
@@ -149,10 +332,17 @@ class SvgEditorView extends ItemView {
     this.updateHistoryButtons()
   }
 
+  async switchLanguage() {
+    if (this.textarea) this.data = this.textarea.value
+    await this.plugin.toggleLanguage()
+    this.closeInlineTextEditor(true)
+    await this.onOpen()
+  }
+
   async loadFileByPath(path) {
     const file = this.app.vault.getAbstractFileByPath(path)
     if (!(file instanceof TFile)) {
-      new Notice(`SVG file not found: ${path}`)
+      new Notice(`${this.t('fileNotFound')}: ${path}`)
       return
     }
 
@@ -170,7 +360,7 @@ class SvgEditorView extends ItemView {
 
   async saveFile() {
     if (!this.file) {
-      new Notice('没有打开 SVG 文件')
+      new Notice(this.t('noOpenFile'))
       return
     }
 
@@ -178,8 +368,8 @@ class SvgEditorView extends ItemView {
     await this.ensureBackupFile()
     await this.app.vault.modify(this.file, this.data)
     this.dirty = false
-    new Notice('SVG 已保存')
-    this.setStatus(`Saved · ${this.describeSvg(this.data)}`)
+    new Notice(this.t('saved'))
+    this.setStatus(`${this.t('savedStatus')} · ${this.describeSvg(this.data)}`)
   }
 
   async reloadFile() {
@@ -194,12 +384,12 @@ class SvgEditorView extends ItemView {
     this.render()
     this.renderInspector(null)
     this.updateHistoryButtons()
-    this.setStatus(`Reloaded · ${this.describeSvg(this.data)}`)
+    this.setStatus(`${this.t('reloadedStatus')} · ${this.describeSvg(this.data)}`)
   }
 
   render() {
     if (!this.preview) return
-    const prefix = this.dirty ? 'Unsaved · ' : ''
+    const prefix = this.dirty ? `${this.t('unsavedStatus')} · ` : ''
     this.setStatus(prefix + this.describeSvg(this.data))
     this.preview.empty()
     this.renderedSvg = null
@@ -208,7 +398,7 @@ class SvgEditorView extends ItemView {
     if (!doc) {
       this.preview.createDiv({
         cls: 'svg-editor-error',
-        text: 'SVG 无法解析，请检查源码中的标签或属性是否完整。',
+        text: this.t('parseError'),
       })
       this.renderLayers(null)
       return
@@ -357,15 +547,15 @@ class SvgEditorView extends ItemView {
     if (!this.selectedPath) return
 
     const menu = new Menu()
-    menu.addItem((item) => item.setTitle('复制').setIcon('copy').onClick(() => this.duplicateSelectedElement()))
-    menu.addItem((item) => item.setTitle('删除').setIcon('trash').onClick(() => this.deleteSelectedElement()))
+    menu.addItem((item) => item.setTitle(this.t('duplicate')).setIcon('copy').onClick(() => this.duplicateSelectedElement()))
+    menu.addItem((item) => item.setTitle(this.t('delete')).setIcon('trash').onClick(() => this.deleteSelectedElement()))
     menu.addSeparator()
-    menu.addItem((item) => item.setTitle('上移一层').setIcon('arrow-up').onClick(() => this.moveSelectedElement(-1)))
-    menu.addItem((item) => item.setTitle('下移一层').setIcon('arrow-down').onClick(() => this.moveSelectedElement(1)))
-    menu.addItem((item) => item.setTitle('置于顶层').setIcon('bring-to-front').onClick(() => this.moveSelectedElementToEdge(1)))
-    menu.addItem((item) => item.setTitle('置于底层').setIcon('send-to-back').onClick(() => this.moveSelectedElementToEdge(-1)))
+    menu.addItem((item) => item.setTitle(this.t('moveUpLayer')).setIcon('arrow-up').onClick(() => this.moveSelectedElement(-1)))
+    menu.addItem((item) => item.setTitle(this.t('moveDownLayer')).setIcon('arrow-down').onClick(() => this.moveSelectedElement(1)))
+    menu.addItem((item) => item.setTitle(this.t('bringToFront')).setIcon('bring-to-front').onClick(() => this.moveSelectedElementToEdge(1)))
+    menu.addItem((item) => item.setTitle(this.t('sendToBack')).setIcon('send-to-back').onClick(() => this.moveSelectedElementToEdge(-1)))
     menu.addSeparator()
-    menu.addItem((item) => item.setTitle('复制 ID').setIcon('clipboard-copy').onClick(() => this.copySelectedId()))
+    menu.addItem((item) => item.setTitle(this.t('copyId')).setIcon('clipboard-copy').onClick(() => this.copySelectedId()))
     menu.showAtMouseEvent(event)
   }
 
@@ -377,14 +567,14 @@ class SvgEditorView extends ItemView {
 
     const original = await this.app.vault.read(this.file)
     await this.app.vault.create(backupPath, original)
-    new Notice(`Created backup: ${backupPath}`)
+    new Notice(`${this.t('backupCreated')}: ${backupPath}`)
   }
 
   describeSvg(svg) {
     const viewBox = svg.match(/\bviewBox\s*=\s*["']([^"']+)["']/i)?.[1]
     const width = svg.match(/\bwidth\s*=\s*["']([^"']+)["']/i)?.[1]
     const height = svg.match(/\bheight\s*=\s*["']([^"']+)["']/i)?.[1]
-    const size = `${svg.length.toLocaleString()} chars`
+    const size = `${svg.length.toLocaleString()} ${this.t('chars')}`
     if (viewBox) return `viewBox ${viewBox} · ${size}`
     if (width || height) return `${width || '?'} x ${height || '?'} · ${size}`
     return size
@@ -651,7 +841,7 @@ class SvgEditorView extends ItemView {
     if (!svg) {
       this.layers.createDiv({
         cls: 'svg-editor-layers-empty',
-        text: '没有可用的 SVG 图层树。',
+        text: this.t('emptyLayers'),
       })
       return
     }
@@ -744,7 +934,7 @@ class SvgEditorView extends ItemView {
     if (!element) {
       this.inspector.createDiv({
         cls: 'svg-editor-inspector-empty',
-        text: '在画布中点击一个元素，即可编辑它的常用 SVG 属性。',
+        text: this.t('inspectorEmpty'),
       })
       return
     }
@@ -771,10 +961,10 @@ class SvgEditorView extends ItemView {
   renderElementActions() {
     const actions = this.inspector.createDiv({ cls: 'svg-editor-element-actions' })
 
-    this.createActionButton(actions, '上移', () => this.moveSelectedElement(-1))
-    this.createActionButton(actions, '下移', () => this.moveSelectedElement(1))
-    this.createActionButton(actions, '复制', () => this.duplicateSelectedElement())
-    this.createActionButton(actions, '删除', () => this.deleteSelectedElement(), 'is-danger')
+    this.createActionButton(actions, this.t('moveUp'), () => this.moveSelectedElement(-1))
+    this.createActionButton(actions, this.t('moveDown'), () => this.moveSelectedElement(1))
+    this.createActionButton(actions, this.t('duplicate'), () => this.duplicateSelectedElement())
+    this.createActionButton(actions, this.t('delete'), () => this.deleteSelectedElement(), 'is-danger')
   }
 
   createActionButton(parent, label, onClick, extraClass) {
@@ -811,7 +1001,7 @@ class SvgEditorView extends ItemView {
       cls: 'svg-editor-text-input',
       attr: {
         value: displayValue,
-        placeholder: '(empty)',
+        placeholder: this.t('emptyValue'),
       },
     })
     controls.appendChild(input)
@@ -819,7 +1009,7 @@ class SvgEditorView extends ItemView {
     if (isInherited) {
       row.createDiv({
         cls: 'svg-editor-field-hint',
-        text: '来自计算样式；编辑后会写入内联属性',
+        text: this.t('inheritedStyleHint'),
       })
     }
 
@@ -907,27 +1097,27 @@ class SvgEditorView extends ItemView {
   renderElementSummary(element) {
     const tag = element.tagName.toLowerCase()
     const rows = [
-      ['type', tag],
-      ['children', String(element.children.length)],
+      [this.t('type'), tag],
+      [this.t('children'), String(element.children.length)],
     ]
 
-    if (tag === 'g') rows.push(['note', 'group: size comes from child elements'])
-    if (tag === 'path') rows.push(['path data', this.truncate(element.getAttribute('d') || '', 42)])
+    if (tag === 'g') rows.push([this.t('note'), this.t('groupSizeNote')])
+    if (tag === 'path') rows.push([this.t('pathData'), this.truncate(element.getAttribute('d') || '', 42)])
     if (element.hasAttribute('transform')) {
       rows.push(['transform', this.truncate(element.getAttribute('transform') || '', 42)])
     }
 
-    this.createInfoSection('元素', rows)
+    this.createInfoSection(this.t('element'), rows)
   }
 
   renderVisualBounds(renderedElement) {
     const bounds = this.getVisualBounds(renderedElement)
     if (!bounds) {
-      this.createInfoSection('视觉边界', [['状态', '不可用']])
+      this.createInfoSection(this.t('visualBounds'), [[this.t('status'), this.t('unavailable')]])
       return
     }
 
-    this.createInfoSection('视觉边界', [
+    this.createInfoSection(this.t('visualBounds'), [
       ['x', this.formatNumber(bounds.x)],
       ['y', this.formatNumber(bounds.y)],
       ['width', this.formatNumber(bounds.width)],
@@ -937,7 +1127,7 @@ class SvgEditorView extends ItemView {
 
   renderComputedStyle(renderedElement) {
     if (!renderedElement || typeof window.getComputedStyle !== 'function') {
-      this.createInfoSection('计算样式', [['状态', '不可用']])
+      this.createInfoSection(this.t('computedStyle'), [[this.t('status'), this.t('unavailable')]])
       return
     }
 
@@ -946,35 +1136,11 @@ class SvgEditorView extends ItemView {
       .map((name) => [name, this.truncate((style.getPropertyValue(name) || '').trim(), 42)])
       .filter(([, value]) => value && value !== 'normal')
 
-    this.createInfoSection('计算样式', rows.length ? rows : [['状态', '没有可用的计算样式']])
+    this.createInfoSection(this.t('computedStyle'), rows.length ? rows : [[this.t('status'), this.t('noComputedStyle')]])
   }
 
   getAttributeLabel(name) {
-    const labels = {
-      fill: '填充 fill',
-      stroke: '描边 stroke',
-      'stroke-width': '描边粗细 stroke-width',
-      opacity: '透明度 opacity',
-      transform: '变换 transform',
-      x: '横坐标 x',
-      y: '纵坐标 y',
-      width: '宽度 width',
-      height: '高度 height',
-      rx: '圆角 X rx',
-      ry: '圆角 Y ry',
-      cx: '圆心 X cx',
-      cy: '圆心 Y cy',
-      r: '半径 r',
-      x1: '起点 X x1',
-      y1: '起点 Y y1',
-      x2: '终点 X x2',
-      y2: '终点 Y y2',
-      'font-size': '字号 font-size',
-      'font-family': '字体 font-family',
-      'font-weight': '字重 font-weight',
-      d: '路径 d',
-    }
-    return labels[name] || name
+    return this.plugin.attributeLabel(name)
   }
 
   createInfoSection(title, rows) {
@@ -984,7 +1150,7 @@ class SvgEditorView extends ItemView {
     for (const [name, value] of rows) {
       const row = section.createDiv({ cls: 'svg-editor-info-row' })
       row.createSpan({ cls: 'svg-editor-info-name', text: name })
-      row.createSpan({ cls: 'svg-editor-info-value', text: value || '(empty)' })
+      row.createSpan({ cls: 'svg-editor-info-value', text: value || this.t('emptyValue') })
     }
   }
 
@@ -1029,8 +1195,8 @@ class SvgEditorView extends ItemView {
 
   createTextField(element) {
     const row = this.inspector.createDiv({ cls: 'svg-editor-field svg-editor-field-wide' })
-    row.createEl('label', { text: '文本 text' })
-    const editButton = row.createEl('button', { cls: 'svg-editor-action-button', text: '编辑文本' })
+    row.createEl('label', { text: this.t('textLabel') })
+    const editButton = row.createEl('button', { cls: 'svg-editor-action-button', text: this.t('editText') })
     editButton.addEventListener('click', () => this.editSelectedText())
     const input = row.createEl('textarea', {
       attr: { rows: '3' },
@@ -1280,12 +1446,12 @@ class SvgEditorView extends ItemView {
 
     const id = selected.getAttribute('id')
     if (!id) {
-      new Notice('当前元素没有 ID')
+      new Notice(this.t('noElementId'))
       return
     }
 
     await navigator.clipboard.writeText(id)
-    new Notice(`已复制 ID：${id}`)
+    new Notice(`${this.t('copiedId')}: ${id}`)
   }
 
   assignDuplicateIds(element) {

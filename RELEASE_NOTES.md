@@ -8,6 +8,7 @@ Initial release of SVG Editor for Obsidian.
 - Edit SVG source with live preview.
 - Select elements from the canvas or layer tree.
 - Edit common attributes including fill, stroke, opacity, size, position, and text.
+- Switch the editor UI between Chinese and English.
 - Edit text inline on the canvas.
 - Drag SVG elements on the canvas.
 - Duplicate, delete, reorder, bring to front, and send to back.
