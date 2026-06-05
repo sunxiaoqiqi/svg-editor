@@ -6,9 +6,11 @@ Initial release of SVG Editor for Obsidian.
 
 - Open `.svg` files from the Obsidian file menu.
 - Edit SVG source with live preview.
+- Collapse the source pane to give the canvas more room.
 - Select elements from the canvas or layer tree.
 - Edit common attributes including fill, stroke, opacity, size, position, and text.
 - Switch the editor UI between Chinese and English.
+- Inspect large SVGs with horizontal and vertical canvas scrollbars.
 - Resize a selected element directly on the canvas.
 - Select multiple elements and drag them together.
 - Insert text, rectangle, and circle elements.
