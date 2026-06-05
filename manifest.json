@@ -1,0 +1,10 @@
+{
+  "id": "svg-editor",
+  "name": "SVG Editor",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Edit SVG files in Obsidian with source, layers, canvas, and inspector panes.",
+  "author": "suntinglu777",
+  "authorUrl": "https://github.com/suntinglu777",
+  "isDesktopOnly": false
+}

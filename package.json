@@ -1,0 +1,27 @@
+{
+  "name": "obsidian-svg-editor",
+  "version": "0.1.0",
+  "description": "Edit SVG files in Obsidian with source, layers, canvas, and inspector panes.",
+  "main": "main.js",
+  "scripts": {
+    "build": "node --check src/main.js && node esbuild.config.mjs production",
+    "dev": "node esbuild.config.mjs",
+    "lint": "eslint .",
+    "check": "node --check src/main.js",
+    "release:check": "npm run lint && npm run build && node scripts/validate-release.mjs"
+  },
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "svg",
+    "editor"
+  ],
+  "author": "suntinglu777",
+  "license": "MIT",
+  "devDependencies": {
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.0.0",
+    "obsidian": "^1.8.7"
+  }
+}
