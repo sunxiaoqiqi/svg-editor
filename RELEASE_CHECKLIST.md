@@ -7,6 +7,7 @@ Use this checklist before publishing a GitHub release or submitting to the Obsid
 - [ ] `npm install`
 - [ ] `npm run lint`
 - [ ] `npm run build`
+- [ ] `npm run release:prepare`
 - [ ] `npm run release:check`
 - [ ] Confirm `manifest.json` version matches `package.json`.
 - [ ] Confirm release assets include `main.js`, `manifest.json`, and `styles.css`.

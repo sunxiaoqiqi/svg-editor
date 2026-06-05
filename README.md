@@ -63,6 +63,7 @@ The Copy ID command writes the selected element ID to the system clipboard only 
 npm install
 npm run lint
 npm run build
+npm run release:prepare
 npm run release:check
 ```
 
@@ -71,6 +72,8 @@ Build output for release:
 - `main.js`
 - `manifest.json`
 - `styles.css`
+
+`npm run release:prepare` copies those files into `release/v<version>` based on `manifest.json`.
 
 For local testing, copy those files into an Obsidian vault plugin folder.
 
@@ -87,6 +90,8 @@ Before submitting to the Obsidian community plugin directory, run:
 ```bash
 npm run release:check
 ```
+
+This command runs linting, builds `main.js`, prepares `release/v<version>`, and verifies that the release assets match the root build output.
 
 ## License
 
