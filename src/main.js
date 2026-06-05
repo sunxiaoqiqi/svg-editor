@@ -982,37 +982,26 @@ class SvgEditorView extends ItemView {
   renderResizeControls(svg, path) {
     const selected = this.findElementByPath(svg, path)
     if (!selected || selected.tagName.toLowerCase() === 'svg') return
-    if (typeof selected.getBBox !== 'function') return
+    const box = this.getElementSvgBounds(selected)
+    if (!box) return
 
-    let box
-    try {
-      box = selected.getBBox()
-    } catch {
-      return
-    }
-
-    if (!Number.isFinite(box.x) || !Number.isFinite(box.y)) return
-    const width = Math.max(box.width, 1)
-    const height = Math.max(box.height, 1)
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
     group.classList.add('svg-editor-selection-controls')
     group.setAttribute('data-editor-target-path', path.join('.'))
-    const transform = selected.getAttribute('transform')
-    if (transform) group.setAttribute('transform', transform)
 
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
     rect.setAttribute('x', String(box.x))
     rect.setAttribute('y', String(box.y))
-    rect.setAttribute('width', String(width))
-    rect.setAttribute('height', String(height))
+    rect.setAttribute('width', String(box.width))
+    rect.setAttribute('height', String(box.height))
     rect.classList.add('svg-editor-selection-box')
     group.appendChild(rect)
 
     const handles = [
       ['nw', box.x, box.y],
-      ['ne', box.x + width, box.y],
-      ['sw', box.x, box.y + height],
-      ['se', box.x + width, box.y + height],
+      ['ne', box.x + box.width, box.y],
+      ['sw', box.x, box.y + box.height],
+      ['se', box.x + box.width, box.y + box.height],
     ]
 
     for (const [handle, x, y] of handles) {
@@ -1026,6 +1015,50 @@ class SvgEditorView extends ItemView {
     }
 
     svg.appendChild(group)
+  }
+
+  getElementSvgBounds(element) {
+    const svg = element.ownerSVGElement || this.renderedSvg
+    if (!svg || typeof element.getBBox !== 'function') return null
+
+    let bbox
+    try {
+      bbox = element.getBBox()
+    } catch {
+      return null
+    }
+
+    const matrix = element.getCTM()
+    const rootMatrix = svg.getScreenCTM()
+    if (!matrix || !rootMatrix) return null
+
+    const toSvg = rootMatrix.inverse().multiply(matrix)
+    const points = [
+      [bbox.x, bbox.y],
+      [bbox.x + bbox.width, bbox.y],
+      [bbox.x, bbox.y + bbox.height],
+      [bbox.x + bbox.width, bbox.y + bbox.height],
+    ].map(([x, y]) => {
+      const point = svg.createSVGPoint()
+      point.x = x
+      point.y = y
+      return point.matrixTransform(toSvg)
+    })
+
+    const xs = points.map((point) => point.x)
+    const ys = points.map((point) => point.y)
+    const minX = Math.min(...xs)
+    const maxX = Math.max(...xs)
+    const minY = Math.min(...ys)
+    const maxY = Math.max(...ys)
+
+    if (![minX, maxX, minY, maxY].every((value) => Number.isFinite(value))) return null
+    return {
+      x: minX,
+      y: minY,
+      width: Math.max(1, maxX - minX),
+      height: Math.max(1, maxY - minY),
+    }
   }
 
   startResize(svg, event, handle) {
@@ -1639,6 +1672,7 @@ class SvgEditorView extends ItemView {
       element.setAttribute('fill', 'none')
       element.setAttribute('stroke', '#2563eb')
       element.setAttribute('stroke-width', '2')
+      element.setAttribute('pointer-events', 'all')
     } else if (type === 'circle') {
       element.setAttribute('cx', this.formatNumber(centerX))
       element.setAttribute('cy', this.formatNumber(centerY))
@@ -1646,6 +1680,7 @@ class SvgEditorView extends ItemView {
       element.setAttribute('fill', 'none')
       element.setAttribute('stroke', '#2563eb')
       element.setAttribute('stroke-width', '2')
+      element.setAttribute('pointer-events', 'all')
     } else {
       return
     }
