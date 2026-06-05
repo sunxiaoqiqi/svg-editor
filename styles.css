@@ -209,6 +209,16 @@
   cursor: nesw-resize;
 }
 
+.svg-editor-preview .svg-editor-resize-handle.is-n,
+.svg-editor-preview .svg-editor-resize-handle.is-s {
+  cursor: ns-resize;
+}
+
+.svg-editor-preview .svg-editor-resize-handle.is-e,
+.svg-editor-preview .svg-editor-resize-handle.is-w {
+  cursor: ew-resize;
+}
+
 .svg-editor-inspector {
   background: var(--background-primary);
   flex: 1;

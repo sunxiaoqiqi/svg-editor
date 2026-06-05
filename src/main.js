@@ -997,14 +997,7 @@ class SvgEditorView extends ItemView {
     rect.classList.add('svg-editor-selection-box')
     group.appendChild(rect)
 
-    const handles = [
-      ['nw', box.x, box.y],
-      ['ne', box.x + box.width, box.y],
-      ['sw', box.x, box.y + box.height],
-      ['se', box.x + box.width, box.y + box.height],
-    ]
-
-    for (const [handle, x, y] of handles) {
+    for (const [handle, x, y] of this.getResizeHandles(box)) {
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
       circle.setAttribute('cx', String(x))
       circle.setAttribute('cy', String(y))
@@ -1015,6 +1008,46 @@ class SvgEditorView extends ItemView {
     }
 
     svg.appendChild(group)
+  }
+
+  getResizeHandles(box) {
+    const midX = box.x + box.width / 2
+    const midY = box.y + box.height / 2
+    const right = box.x + box.width
+    const bottom = box.y + box.height
+    return [
+      ['nw', box.x, box.y],
+      ['n', midX, box.y],
+      ['ne', right, box.y],
+      ['e', right, midY],
+      ['se', right, bottom],
+      ['s', midX, bottom],
+      ['sw', box.x, bottom],
+      ['w', box.x, midY],
+    ]
+  }
+
+  updateResizeControls(svg, element) {
+    const controls = svg.querySelector('.svg-editor-selection-controls')
+    if (!controls) return
+
+    const box = this.getElementSvgBounds(element)
+    if (!box) return
+
+    const rect = controls.querySelector('.svg-editor-selection-box')
+    if (rect) {
+      rect.setAttribute('x', String(box.x))
+      rect.setAttribute('y', String(box.y))
+      rect.setAttribute('width', String(box.width))
+      rect.setAttribute('height', String(box.height))
+    }
+
+    for (const [handle, x, y] of this.getResizeHandles(box)) {
+      const circle = controls.querySelector(`[data-editor-resize-handle="${handle}"]`)
+      if (!circle) continue
+      circle.setAttribute('cx', String(x))
+      circle.setAttribute('cy', String(y))
+    }
   }
 
   getElementSvgBounds(element) {
@@ -1072,10 +1105,7 @@ class SvgEditorView extends ItemView {
     const matrix = element.getCTM()
     const inverseMatrix = matrix ? matrix.inverse() : null
     const start = this.getLocalPoint(element, event, inverseMatrix)
-    const origin = {
-      x: handle.includes('w') ? box.x + box.width : box.x,
-      y: handle.includes('n') ? box.y + box.height : box.y,
-    }
+    const origin = this.getResizeOrigin(box, handle)
 
     this.resizeState = {
       path: [...this.selectedPath],
@@ -1105,11 +1135,18 @@ class SvgEditorView extends ItemView {
     const point = this.getLocalPoint(state.element, event, state.inverseMatrix)
     const sxBase = state.startX - state.originX
     const syBase = state.startY - state.originY
-    if (Math.abs(sxBase) < 0.01 || Math.abs(syBase) < 0.01) return
 
-    let sx = (point.x - state.originX) / sxBase
-    let sy = (point.y - state.originY) / syBase
-    if (event.shiftKey) {
+    let sx = 1
+    let sy = 1
+    if (state.handle.includes('e') || state.handle.includes('w')) {
+      if (Math.abs(sxBase) < 0.01) return
+      sx = (point.x - state.originX) / sxBase
+    }
+    if (state.handle.includes('n') || state.handle.includes('s')) {
+      if (Math.abs(syBase) < 0.01) return
+      sy = (point.y - state.originY) / syBase
+    }
+    if (event.shiftKey && state.handle.length === 2) {
       const uniform = Math.max(Math.abs(sx), Math.abs(sy))
       sx = Math.sign(sx || 1) * uniform
       sy = Math.sign(sy || 1) * uniform
@@ -1121,9 +1158,15 @@ class SvgEditorView extends ItemView {
 
     state.nextTransform = this.composeScaledTransform(state.originalTransform, state.originX, state.originY, sx, sy)
     state.element.setAttribute('transform', state.nextTransform)
-    const controls = svg.querySelector('.svg-editor-selection-controls')
-    if (controls) controls.setAttribute('transform', state.nextTransform)
+    this.updateResizeControls(svg, state.element)
     this.renderInspector(this.getSelectedElement(), state.element)
+  }
+
+  getResizeOrigin(box, handle) {
+    return {
+      x: handle.includes('w') ? box.x + box.width : handle.includes('e') ? box.x : box.x + box.width / 2,
+      y: handle.includes('n') ? box.y + box.height : handle.includes('s') ? box.y : box.y + box.height / 2,
+    }
   }
 
   finishResize(event) {
